@@ -1,4 +1,5 @@
 using HoneyRaesAPI.Models;
+using HoneyRaesAPI.Models.DTOs;
 
 List<Customer> customers = new List<Customer>()
 {
@@ -62,16 +63,13 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>()
     {
         Id = 3,
         CustomerId = 3,
-        EmployeeId = 1,
         Description = "Faulty circuit breaker",
         Emergency = true,
-        DateCompleted = new DateTime(2026, 10, 9)
     },
     new ServiceTicket()
     {
         Id = 4,
         CustomerId = 1,
-        EmployeeId = 2,
         Description = "Blocked bathroom drain",
         Emergency = false,
         DateCompleted = new DateTime(2026, 10, 12)
@@ -83,7 +81,6 @@ List<ServiceTicket> serviceTickets = new List<ServiceTicket>()
         EmployeeId = 1,
         Description = "Damaged electrical socket",
         Emergency = false,
-        DateCompleted = new DateTime(2026, 10, 15)
     }
 };
 
@@ -105,33 +102,35 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/servicetickets", () =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
-
-app.MapGet("/hello", () =>
-{
-    return "hello";
+    return serviceTickets.Select(t => new ServiceTicketDTO
+    {
+        Id = t.Id,
+        CustomerId = t.CustomerId,
+        EmployeeId = t.EmployeeId,
+        Description = t.Description,
+        Emergency = t.Emergency,
+        DateCompleted = t.DateCompleted
+    });
 });
+
+app.MapGet("/servicetickets/{id}", (int id) =>
+{
+    ServiceTicket serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+
+    return new ServiceTicketDTO
+    {
+        Id = serviceTicket.Id,
+        CustomerId = serviceTicket.CustomerId,
+        EmployeeId = serviceTicket.EmployeeId,
+        Description = serviceTicket.Description,
+        Emergency = serviceTicket.Emergency,
+        DateCompleted = serviceTicket.DateCompleted
+    };
+});
+
+
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

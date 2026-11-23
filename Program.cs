@@ -227,6 +227,79 @@ app.MapGet("/customers/{id}", (int id) =>
     });
 });
 
+app.MapPost("/servicetickets", (ServiceTicket serviceTicket) =>
+{
+    Customer customer = customers.FirstOrDefault(c => c.Id == serviceTicket.CustomerId);
+
+    if (customer == null)
+    {
+        return Results.BadRequest();
+    }
+
+    serviceTicket.Id = serviceTickets.Max(st => st.Id) + 1;
+    serviceTickets.Add(serviceTicket);
+
+    return Results.Created($"/servicetickets/{serviceTicket.Id}", new ServiceTicketDTO
+    {
+        Id = serviceTicket.Id,
+        CustomerId = serviceTicket.CustomerId,
+        Customer = new CustomerDTO
+        {
+            Id = customer.Id,
+            Name = customer.Name,
+            Address = customer.Address,
+        },
+        Description = serviceTicket.Description,
+        Emergency = serviceTicket.Emergency
+    });
+});
+
+app.MapDelete("/servicetickets/{id}", (int id) =>
+{
+    ServiceTicket serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+
+    if (serviceTicket == null)
+    {
+        return Results.NotFound();
+    }
+
+    serviceTickets.Remove(serviceTicket);
+    return Results.NoContent();
+
+});
+
+app.MapPut("/servicetickets/{id}", (int id, ServiceTicket serviceTicket) =>
+{
+    ServiceTicket ticketToUpdate = serviceTickets.FirstOrDefault(st => st.Id == id);
+
+    if (ticketToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (id != serviceTicket.Id)
+    {
+        return Results.BadRequest();
+    }
+
+    ticketToUpdate.CustomerId = serviceTicket.CustomerId;
+    ticketToUpdate.EmployeeId = serviceTicket.EmployeeId;
+    ticketToUpdate.Description = serviceTicket.Description;
+    ticketToUpdate.Emergency = serviceTicket.Emergency;
+    ticketToUpdate.DateCompleted = serviceTicket.DateCompleted;
+
+    return Results.NoContent();
+});
+
+app.MapPost("/servicetickets/{id}/complete", (int id) =>
+{
+    ServiceTicket serviceTicket = serviceTickets.FirstOrDefault(st => st.Id == id);
+
+    if (serviceTicket == null)
+    {
+        return Results.NotFound();
+    }
+
+    serviceTicket.DateCompleted = DateTime.Now;
+});
 
 app.Run();
-
